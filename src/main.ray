@@ -149,6 +149,15 @@ fn on_message(st: Stage, e: ui.UiEvent) -> Stage {
 }
 
 fn main() -> int {
+    // 0. The frontend lives at ray://app/assets/… (embedded in the native binary; read live
+    //    from disk under `ray run`).
+    match (ui.mount_embed("", "assets")) {
+        Result.Ok(_) => { },
+        Result.Err(e) => {
+            print("could not mount the assets: " + e);
+            return 1;
+        },
+    }
     // 1. Borderless splash while "loading".
     let splash = show_splash();
     time.sleep(1400);
