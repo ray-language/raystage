@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Command Palette</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 14px system-ui, sans-serif; background: Canvas; color: CanvasText; }
+  input { width: 100%; box-sizing: border-box; font: 16px system-ui; padding: 12px 14px; border: 0; border-bottom: 1px solid color-mix(in srgb, CanvasText 15%, transparent); outline: none; background: transparent; color: inherit; }
+  ul { list-style: none; margin: 0; padding: 6px; } li { padding: 8px 10px; border-radius: 6px; cursor: pointer; } li.sel, li:hover { background: color-mix(in srgb, CanvasText 10%, Canvas); }
+</style></head>
+<body>
+<input id="q" placeholder="Type a command… (Esc closes the panel)" autofocus>
+<ul id="list"></ul>
+<script>
+  const cmds = ['Open File…', 'Save All', 'Toggle Sidebar', 'Go to Symbol', 'Format Document', 'Reload Window', 'Enter Full Screen'];
+  const q = document.getElementById('q'), list = document.getElementById('list');
+  let sel = 0;
+  const send = (t) => window.ray && window.ray.send && window.ray.send(t);
+  function render() {
+    const f = cmds.filter(c => c.toLowerCase().includes(q.value.toLowerCase()));
+    list.innerHTML = f.map((c, i) => `<li class="${i === sel ? 'sel' : ''}" onclick="pick('${c}')">${c}</li>`).join('');
+    return f;
+  }
+  window.pick = (c) => send('palette_pick:' + c);
+  q.addEventListener('input', () => { sel = 0; render(); });
+  q.addEventListener('keydown', (e) => {
+    const f = render();
+    if (e.key === 'Escape') send('close_me');
+    else if (e.key === 'ArrowDown') { sel = Math.min(sel + 1, f.length - 1); render(); }
+    else if (e.key === 'ArrowUp') { sel = Math.max(sel - 1, 0); render(); }
+    else if (e.key === 'Enter' && f[sel]) pick(f[sel]);
+  });
+  render(); q.focus();
+</script>
+</body></html>

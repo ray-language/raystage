@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>RayStage</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; font: 14px/1.45 system-ui, sans-serif; background: Canvas; color: CanvasText; padding: 20px 24px; }
+  h1 { font-size: 18px; margin: 0 0 4px; } p.lead { margin: 0 0 18px; opacity: .75; }
+  section { margin-bottom: 18px; } h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; opacity: .6; margin: 0 0 8px; }
+  button { font: inherit; padding: 6px 12px; border-radius: 8px; border: 1px solid color-mix(in srgb, CanvasText 25%, transparent); background: color-mix(in srgb, CanvasText 6%, Canvas); color: inherit; margin: 0 6px 6px 0; cursor: pointer; }
+  button:hover { background: color-mix(in srgb, CanvasText 14%, Canvas); }
+  input { font: inherit; padding: 5px 8px; border-radius: 6px; border: 1px solid color-mix(in srgb, CanvasText 25%, transparent); background: transparent; color: inherit; width: 110px; }
+  #status { position: fixed; left: 0; right: 0; bottom: 0; padding: 6px 24px; font-size: 12px; border-top: 1px solid color-mix(in srgb, CanvasText 15%, transparent); opacity: .8; display: flex; justify-content: space-between; }
+</style></head>
+<body>
+<h1>RayStage</h1>
+<p class="lead">Window kinds and live geometry of <code>std/ui</code> (raylang 1.24, M260). Every button is a native call.</p>
+<section><h2>Secondary windows</h2>
+  <button onclick="send('open:palette')">Command palette (panel, owned, on top) <kbd>⌘P</kbd></button>
+  <button onclick="send('open:inspector')">Inspector (panel, docked left)</button>
+  <button onclick="send('open:float')">Floating note (borderless)</button>
+  <button onclick="send('splash')">Show splash again (borderless, 1.5 s)</button>
+</section>
+<section><h2>This window</h2>
+  <button onclick="send('fullscreen:on')">Full screen on</button>
+  <button onclick="send('fullscreen:off')">Full screen off</button>
+  <button onclick="send('ontop:on')">Always on top: on</button>
+  <button onclick="send('ontop:off')">Always on top: off</button>
+  <button onclick="send('center')">Center</button>
+  <button onclick="send('minimize')">Minimize</button>
+  <button onclick="send('maximize')">Maximize / zoom</button>
+</section>
+<section><h2>Geometry</h2>
+  <button onclick="send('size:800x600')">800×600</button>
+  <button onclick="send('size:1200x760')">1200×760</button>
+  <button onclick="send('size:640x420')">640×420 (the minimum)</button>
+  &nbsp; position <input id="pos" value="40,60"> <button onclick="send('pos:' + document.getElementById('pos').value)">Move</button>
+</section>
+<div id="status"><span id="msg">starting…</span><span id="focus"></span></div>
+<script>
+  const send = (t) => window.ray && window.ray.send && window.ray.send(t);
+  window.rayStatus = (t) => { document.getElementById('msg').textContent = t; };
+  window.rayFocused = (w) => { document.getElementById('focus').textContent = 'focused window: ' + w; };
+  send('ready');
+</script>
+</body></html>

@@ -1,0 +1,222 @@
+// RayStage — a workbench for the window KINDS and geometry of std/ui (raylang 1.24, M260):
+//
+//   - a borderless splash at start-up (kind "borderless", centered, always on top)
+//   - the main document window with a control panel
+//   - a command palette: kind "panel" owned by the main window (`parent`), always on top
+//   - an inspector panel docked to the right of the main window (`set_position`)
+//   - a borderless floating note with its own close button (movable by its background)
+//   - live geometry on the main window: fullscreen, size presets, position, center,
+//     minimize, maximize, always-on-top
+//
+// The page talks over the IPC bridge (`window.ray.send("cmd:arg")`); the program keeps the
+// handles of the secondary windows and reports `focused`/`closed` events back to the panel.
+
+import std/ui;
+import std/time;
+import stage;
+
+struct Stage {
+    main: int,
+    palette: int,
+    inspector: int,
+    note: int,
+}
+
+fn none_stage(main: int) -> Stage {
+    Stage { main: main, palette: 0, inspector: 0, note: 0 }
+}
+
+fn page(name: string) -> string {
+    "ray://app/assets/" + name
+}
+
+// Pushes a one-line status to the control panel.
+fn status(st: Stage, text: string) {
+    let _e = ui.eval_js(st.main, "window.rayStatus && window.rayStatus(" + json_string(text) + ")");
+}
+
+// Minimal JSON string literal (the texts are ours: ASCII without quotes/backslashes).
+fn json_string(s: string) -> string {
+    "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+}
+
+fn open_secondary(st: Stage, role: string) -> Stage {
+    var s = st;
+    let (kind, w, h) = stage.kind_of(role);
+    var o = ui.options(w, h);
+    o.kind = kind;
+    o.parent = st.main;
+    o.always_on_top = true;
+    o.center = role == "palette";
+    o.minimizable = false;
+    let title = if (role == "palette") {
+        "Command Palette"
+    } else if (role == "inspector") {
+        "Inspector"
+    } else {
+        "Floating note"
+    };
+    match (ui.open_with(title, page(role + ".html"), o)) {
+        Result.Ok(h2) => {
+            if (role == "palette") {
+                s.palette = h2;
+            } else if (role == "inspector") {
+                s.inspector = h2;
+                let _p = ui.set_position(h2, 40, 120);
+            } else {
+                s.note = h2;
+                let _p = ui.set_position(h2, 80, 80);
+            }
+            status(s, title + " opened as kind '" + kind + "' (window " + to_string(h2) + ")");
+        },
+        Result.Err(e) => {
+            status(s, "could not open " + role + ": " + e);
+        },
+    }
+    s
+}
+
+fn show_splash() -> int {
+    var o = ui.options(380, 220);
+    o.kind = "borderless";
+    o.always_on_top = true;
+    o.resizable = false;
+    o.minimizable = false;
+    match (ui.open_with("RayStage", page("splash.html"), o)) {
+        Result.Ok(h) => h,
+        Result.Err(e) => {
+            print("splash: " + e);
+            0
+        },
+    }
+}
+
+fn on_message(st: Stage, e: ui.UiEvent) -> Stage {
+    var s = st;
+    let (cmd, arg) = stage.split_message(e.tag);
+    if (cmd == "open") {
+        s = open_secondary(s, arg);
+    } else if (cmd == "close_me") {
+        close(e.window);
+    } else if (cmd == "fullscreen") {
+        let _r = ui.set_fullscreen(s.main, arg == "on");
+        status(s, "fullscreen " + arg);
+    } else if (cmd == "ontop") {
+        let _r = ui.set_always_on_top(s.main, arg == "on");
+        status(s, "always on top " + arg);
+    } else if (cmd == "size") {
+        match (stage.parse_size(arg)) {
+            Option.Some(p) => {
+                match (ui.set_size(s.main, p.0, p.1)) {
+                    Result.Ok(_) => status(s, "content size " + arg),
+                    Result.Err(err) => status(s, err),
+                }
+            },
+            Option.None => status(s, "bad size: " + arg),
+        }
+    } else if (cmd == "pos") {
+        match (stage.parse_point(arg)) {
+            Option.Some(p) => {
+                let _r = ui.set_position(s.main, p.0, p.1);
+                status(s, "moved to " + arg);
+            },
+            Option.None => status(s, "bad position: " + arg),
+        }
+    } else if (cmd == "center") {
+        let _r = ui.center(s.main);
+        status(s, "centered");
+    } else if (cmd == "minimize") {
+        let _r = ui.minimize(s.main);
+    } else if (cmd == "maximize") {
+        let _r = ui.maximize(s.main);
+        status(s, "maximize (zoom on macOS: toggles)");
+    } else if (cmd == "splash") {
+        let h = show_splash();
+        time.sleep(1500);
+        if (h != 0) {
+            close(h);
+        }
+        status(s, "splash shown for 1.5 s");
+    } else if (cmd == "palette_pick") {
+        status(s, "palette chose: " + arg);
+        if (s.palette != 0) {
+            close(s.palette);
+        }
+    } else if (cmd == "ready") {
+        status(s, "ready — main window " + to_string(s.main));
+    }
+    s
+}
+
+fn main() -> int {
+    // 1. Borderless splash while "loading".
+    let splash = show_splash();
+    time.sleep(1400);
+
+    // 2. The main document window.
+    var o = ui.options(900, 620);
+    o.min_width = 640;
+    o.min_height = 420;
+    o.autosave = "raystage-main";
+    let main_w = match (ui.open_with(stage.APP_NAME, page("index.html"), o)) {
+        Result.Ok(h) => h,
+        Result.Err(e) => {
+            print("could not open the window: " + e);
+            return 1;
+        },
+    };
+    if (splash != 0) {
+        close(splash);
+    }
+    var st = none_stage(main_w);
+    let _m = ui.menu_at(
+        0,
+        "Window",
+        [
+            ui.item("open:palette", "Command Palette...", "cmd+p"),
+            ui.item("open:inspector", "Inspector", "cmd+i"),
+            ui.item("open:float", "Floating Note", "cmd+f"),
+            ui.separator(),
+            ui.item("fullscreen:on", "Enter Full Screen", "cmd+ctrl+f"),
+            ui.item("fullscreen:off", "Exit Full Screen", ""),
+            ui.item("center", "Center Main Window", ""),
+            ui.separator(),
+            ui.item("role:close", "", "")
+        ]
+    );
+
+    while (true) {
+        let e = match (ui.next_event()) {
+            Result.Ok(ev) => ev,
+            Result.Err(err) => {
+                print("event loop: " + err);
+                return 1;
+            },
+        };
+        if (e.kind == "message") {
+            st = on_message(st, e);
+        } else if (e.kind == "menu") {
+            st = on_message(st, ui.UiEvent { kind: "message", window: st.main, tag: e.tag });
+        } else if (e.kind == "focused") {
+            let _e = ui.eval_js(
+                st.main,
+                "window.rayFocused && window.rayFocused(" + to_string(e.window) + ")"
+            );
+        } else if (e.kind == "closed") {
+            if (e.window == st.main) {
+                return 0;
+            }
+            if (e.window == st.palette) {
+                st.palette = 0;
+            }
+            if (e.window == st.inspector) {
+                st.inspector = 0;
+            }
+            if (e.window == st.note) {
+                st.note = 0;
+            }
+            status(st, "window " + to_string(e.window) + " closed");
+        }
+    }
+    0
+}

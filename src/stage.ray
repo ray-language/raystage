@@ -1,0 +1,42 @@
+// The pure part of RayStage: message parsing and geometry presets, tested in tests/.
+
+pub const APP_NAME: string = "RayStage";
+
+/// Splits an IPC message "cmd:payload" (the payload may contain colons).
+pub fn split_message(tag: string) -> (string, string) {
+    match (tag.index_of(":")) {
+        Option.Some(i) => (tag.substring(0, i), tag.substring(i + 1, tag.len())),
+        Option.None => (tag, ""),
+    }
+}
+
+/// "800x600" -> Some((800, 600)); anything else -> None.
+pub fn parse_size(s: string) -> Option<(int, int)> {
+    parse_pair(s, "x")
+}
+
+/// "40,60" -> Some((40, 60)); anything else -> None.
+pub fn parse_point(s: string) -> Option<(int, int)> {
+    parse_pair(s, ",")
+}
+
+fn parse_pair(s: string, sep: string) -> Option<(int, int)> {
+    let parts = s.trim().split(sep);
+    if (parts.len() != 2) { return Option.None; }
+    match (parse_int(parts[0].trim())) {
+        Option.Some(a) => match (parse_int(parts[1].trim())) {
+            Option.Some(b) => Option.Some((a, b)),
+            Option.None => Option.None,
+        },
+        Option.None => Option.None,
+    }
+}
+
+/// The kind a role of the demo maps to, and its default size.
+pub fn kind_of(role: string) -> (string, int, int) {
+    if (role == "palette") { ("panel", 420, 300) }
+    else if (role == "inspector") { ("panel", 300, 420) }
+    else if (role == "float") { ("borderless", 320, 180) }
+    else if (role == "splash") { ("borderless", 380, 220) }
+    else { ("document", 640, 480) }
+}

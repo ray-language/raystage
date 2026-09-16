@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Floating note</title>
+<style>
+  body { margin: 0; height: 100vh; box-sizing: border-box; padding: 16px 18px; font: 14px system-ui, sans-serif; background: #fff4b8; color: #4a3b00; border-radius: 12px; cursor: default; user-select: none; }
+  button { position: absolute; top: 8px; right: 10px; border: 0; background: transparent; font-size: 16px; cursor: pointer; color: inherit; }
+  small { opacity: .7; }
+</style></head>
+<body>
+<button title="Close" onclick="window.ray && window.ray.send('close_me')">✕</button>
+<b>Borderless window</b><br>
+No title bar, no frame. On macOS you can drag it by its background; it accepts the focus.
+<br><br><small>close_me → the program calls close(h)</small>
+</body></html>

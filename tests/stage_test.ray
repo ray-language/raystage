@@ -1,0 +1,30 @@
+import stage;
+
+@test
+fn split_message_keeps_the_payload_intact() {
+    let (c, p) = stage.split_message("pos:40,60");
+    assert_eq(c, "pos");
+    assert_eq(p, "40,60");
+    let (c2, p2) = stage.split_message("center");
+    assert_eq(c2, "center");
+    assert_eq(p2, "");
+}
+
+@test
+fn sizes_and_points_parse_or_reject() {
+    match (stage.parse_size("800x600")) { Option.Some(p) => { assert_eq(p.0, 800); assert_eq(p.1, 600); }, Option.None => assert(false) }
+    match (stage.parse_point(" 40 , 60 ")) { Option.Some(p) => { assert_eq(p.0, 40); assert_eq(p.1, 60); }, Option.None => assert(false) }
+    match (stage.parse_size("big")) { Option.Some(_) => assert(false), Option.None => {} }
+    match (stage.parse_point("1,2,3")) { Option.Some(_) => assert(false), Option.None => {} }
+}
+
+@test
+fn roles_map_to_window_kinds() {
+    let (k, w, h) = stage.kind_of("palette");
+    assert_eq(k, "panel");
+    assert(w > 0 && h > 0);
+    let (k2, _, _) = stage.kind_of("float");
+    assert_eq(k2, "borderless");
+    let (k3, _, _) = stage.kind_of("anything");
+    assert_eq(k3, "document");
+}
