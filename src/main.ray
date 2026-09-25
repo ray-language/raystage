@@ -13,6 +13,7 @@
 
 import std/ui;
 import std/time;
+import std/json;
 import stage;
 
 struct Stage {
@@ -32,12 +33,10 @@ fn page(name: string) -> string {
 
 // Pushes a one-line status to the control panel.
 fn status(st: Stage, text: string) {
-    let _e = ui.eval_js(st.main, "window.rayStatus && window.rayStatus(" + json_string(text) + ")");
-}
-
-// Minimal JSON string literal (the texts are ours: ASCII without quotes/backslashes).
-fn json_string(s: string) -> string {
-    "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
+    let _e = ui.eval_js(
+        st.main,
+        "window.rayStatus && window.rayStatus(" + json.stringify(json.Json.JStr(text)) + ")"
+    );
 }
 
 fn open_secondary(st: Stage, role: string) -> Stage {
