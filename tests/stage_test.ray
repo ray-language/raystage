@@ -12,10 +12,28 @@ fn split_message_keeps_the_payload_intact() {
 
 @test
 fn sizes_and_points_parse_or_reject() {
-    match (stage.parse_size("800x600")) { Option.Some(p) => { assert_eq(p.0, 800); assert_eq(p.1, 600); }, Option.None => assert(false) }
-    match (stage.parse_point(" 40 , 60 ")) { Option.Some(p) => { assert_eq(p.0, 40); assert_eq(p.1, 60); }, Option.None => assert(false) }
-    match (stage.parse_size("big")) { Option.Some(_) => assert(false), Option.None => {} }
-    match (stage.parse_point("1,2,3")) { Option.Some(_) => assert(false), Option.None => {} }
+    match (stage.parse_size("800x600")) {
+        Option.Some(p) => {
+            assert_eq(p.0, 800);
+            assert_eq(p.1, 600);
+        },
+        Option.None => assert(false),
+    }
+    match (stage.parse_point(" 40 , 60 ")) {
+        Option.Some(p) => {
+            assert_eq(p.0, 40);
+            assert_eq(p.1, 60);
+        },
+        Option.None => assert(false),
+    }
+    match (stage.parse_size("big")) {
+        Option.Some(_) => assert(false),
+        Option.None => { },
+    }
+    match (stage.parse_point("1,2,3")) {
+        Option.Some(_) => assert(false),
+        Option.None => { },
+    }
 }
 
 @test

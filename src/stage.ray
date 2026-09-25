@@ -22,7 +22,9 @@ pub fn parse_point(s: string) -> Option<(int, int)> {
 
 fn parse_pair(s: string, sep: string) -> Option<(int, int)> {
     let parts = s.trim().split(sep);
-    if (parts.len() != 2) { return Option.None; }
+    if (parts.len() != 2) {
+        return Option.None;
+    }
     match (parse_int(parts[0].trim())) {
         Option.Some(a) => match (parse_int(parts[1].trim())) {
             Option.Some(b) => Option.Some((a, b)),
@@ -34,9 +36,15 @@ fn parse_pair(s: string, sep: string) -> Option<(int, int)> {
 
 /// The kind a role of the demo maps to, and its default size.
 pub fn kind_of(role: string) -> (string, int, int) {
-    if (role == "palette") { ("panel", 420, 300) }
-    else if (role == "inspector") { ("panel", 300, 420) }
-    else if (role == "float") { ("borderless", 320, 180) }
-    else if (role == "splash") { ("borderless", 380, 220) }
-    else { ("document", 640, 480) }
+    if (role == "palette") {
+        ("panel", 420, 300)
+    } else if (role == "inspector") {
+        ("panel", 300, 420)
+    } else if (role == "float") {
+        ("borderless", 320, 180)
+    } else if (role == "splash") {
+        ("borderless", 380, 220)
+    } else {
+        ("document", 640, 480)
+    }
 }
