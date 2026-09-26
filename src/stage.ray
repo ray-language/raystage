@@ -25,13 +25,7 @@ fn parse_pair(s: string, sep: string) -> Option<(int, int)> {
     if (parts.len() != 2) {
         return Option.None;
     }
-    match (parse_int(parts[0].trim())) {
-        Option.Some(a) => match (parse_int(parts[1].trim())) {
-            Option.Some(b) => Option.Some((a, b)),
-            Option.None => Option.None,
-        },
-        Option.None => Option.None,
-    }
+    Option.Some((parse_int(parts[0].trim())?, parse_int(parts[1].trim())?))
 }
 
 /// The kind a role of the demo maps to, and its default size.

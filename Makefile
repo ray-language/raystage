@@ -2,7 +2,7 @@ RAY ?= ray
 
 .PHONY: run dev check test native smoke
 
-run:      ## run in the VM (needs raylang >= 1.24)
+run:      ## run in the VM (needs raylang >= 1.27.14)
 	@$(RAY) run
 
 dev:
