@@ -18,7 +18,7 @@ control es una llamada nativa.
 ## Uso
 
 ```sh
-ray run     # raylang >= 1.24
+ray run     # raylang >= 1.27.14
 ray test    # tests del modelo (parseo de mensajes y tamaños, roles → kinds)
 make smoke  # arranque headless (CI, sin display)
 ```

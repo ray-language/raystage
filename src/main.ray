@@ -33,10 +33,7 @@ fn page(name: string) -> string {
 
 // Pushes a one-line status to the control panel.
 fn status(st: Stage, text: string) {
-    let _e = ui.eval_js(
-        st.main,
-        "window.rayStatus && window.rayStatus(" + json.stringify(json.Json.JStr(text)) + ")"
-    );
+    let _e = ui.eval_js(st.main, "window.rayStatus && window.rayStatus(" + text.to_json() + ")");
 }
 
 fn open_secondary(st: Stage, role: string) -> Stage {
@@ -226,5 +223,4 @@ fn main() -> int {
             status(st, "window " + to_string(e.window) + " closed");
         }
     }
-    0
 }
